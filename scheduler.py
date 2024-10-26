@@ -2,8 +2,9 @@ from __future__ import annotations
 from protocols import Timeslot, DegreeProgram, Participant
     
 class Interviewee:
-    def __init__(self, name: str, capes_id: str, time_slots: list[Timeslot], degree_program: DegreeProgram):
+    def __init__(self, name: str, email: str, capes_id: str, time_slots: list[Timeslot], degree_program: DegreeProgram):
         self._name = name
+        self._email = email
         self._capes_id = capes_id
         self._time_slots = time_slots
         self._degree_program = degree_program
@@ -11,6 +12,9 @@ class Interviewee:
     @property
     def name(self) -> str:
         return self._name
+    @property
+    def email(self) -> str:
+        return self._email
     @property
     def capes_id(self) -> str:
         return self._capes_id
@@ -25,18 +29,14 @@ class Interviewee:
         return self._priority
     
 class Interviewer:
-    def __init__(self, name: str, capes_id: str, time_slots: list[Timeslot], degree_program_preference: list[DegreeProgram] | DegreeProgram | None):
+    def __init__(self, name: str, time_slots: list[Timeslot], degree_program_preference: list[DegreeProgram] | DegreeProgram | None):
         self._name = name
-        self._capes_id = capes_id
         self._time_slots = time_slots
         self._degree_program_preference = degree_program_preference
         self._interviewee_list = []
     @property
     def name(self) -> str:
         return self._name
-    @property
-    def capes_id(self) -> str:
-        return self._capes_id
     @property
     def time_slots(self) -> list[Timeslot]:
         return self._time_slots
