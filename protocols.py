@@ -3,11 +3,18 @@ from typing import NewType, Protocol
 from enum import StrEnum
 
 class DegreeProgram(StrEnum):
-    ComputerScience = 'BS Computer Science'
-    IndustrialEngg = 'BS Industrial Engineering'
-    ComputerEngg = 'BS Computer Engineering'
-    MechEngg = 'BS Mechanical Engineering'
+    ChemicalEngg = 'BS Chemical Engineering'
     CivilEngg = 'BS Civil Engineering'
+    ComputerEngg = 'BS Computer Engineering'
+    ComputerScience = 'BS Computer Science'
+    ElectricalEngg = 'BS Electrical Engineering'
+    ElectronicsEngg = 'BS Electronics Engineering'
+    GeodeticEngg = 'BS Geodetic Engineering'
+    IndustrialEngg = 'BS Industrial Engineering'
+    MaterialsEngg = 'BS Materials Engineering'
+    MechEngg = 'BS Mechanical Engineering'
+    MetalEngg = 'BS Metallurgical Engineering'
+    MiningEngg = 'BS Mining Engineering'
 
 class Timeslot:
     def __init__(self, start_time: datetime, end_time: datetime):
