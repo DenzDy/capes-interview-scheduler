@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import NewType, Protocol
-from enum import StrEnum
+from enum import Enum
 
-class DegreeProgram(StrEnum):
+class DegreeProgram(str, Enum):
     ChemicalEngg = 'BS Chemical Engineering'
     CivilEngg = 'BS Civil Engineering'
     ComputerEngg = 'BS Computer Engineering'
@@ -16,7 +16,7 @@ class DegreeProgram(StrEnum):
     MetalEngg = 'BS Metallurgical Engineering'
     MiningEngg = 'BS Mining Engineering'
 
-class Times(StrEnum):
+class Times(str, Enum): # not ideal, but I don't really want to deal with datetime right now
 # Resume Consultations
     Time0915_0945 = "09:00 AM - 09:45 AM"
     Time1000_1045 = "10:00 AM - 10:45 AM"

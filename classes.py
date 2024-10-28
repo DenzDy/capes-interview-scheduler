@@ -47,6 +47,8 @@ class Interviewer:
     def interviewee_list(self) -> dict[Times, list[Interviewee]]:
         return self._interviewee_list
     def add_to_interviewee_list(self, interviewee: Interviewee, time : Times, max_alloc: int):
+        if time not in self._interviewee_list.keys():
+            self._interviewee_list[time] = []
         if len(self._interviewee_list[time]) >= max_alloc:
             return 0
         self._interviewee_list[time].append(interviewee)
