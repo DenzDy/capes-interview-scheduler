@@ -1,8 +1,8 @@
 from __future__ import annotations
-from protocols import Timeslot, DegreeProgram, Participant
+from protocols import Times, DegreeProgram, Participant
     
 class Interviewee:
-    def __init__(self, name: str, email: str, capes_id: str, time_slots: list[Timeslot], degree_program: DegreeProgram):
+    def __init__(self, name: str, email: str, capes_id: str, time_slots: list[Times], degree_program: DegreeProgram):
         self._name = name
         self._email = email
         self._capes_id = capes_id
@@ -19,7 +19,7 @@ class Interviewee:
     def capes_id(self) -> str:
         return self._capes_id
     @property
-    def time_slots(self) -> list[Timeslot]:
+    def time_slots(self) -> list[Times]:
         return self._time_slots
     @property
     def degree_program(self) -> DegreeProgram:
@@ -29,22 +29,25 @@ class Interviewee:
         return self._priority
     
 class Interviewer:
-    def __init__(self, name: str, time_slots: list[Timeslot], degree_program_preference: list[DegreeProgram] | DegreeProgram | None):
+    def __init__(self, name: str, time_slots: list[Times], degree_program_preference: list[DegreeProgram] | DegreeProgram | None):
         self._name = name
         self._time_slots = time_slots
         self._degree_program_preference = degree_program_preference
-        self._interviewee_list = []
+        self._interviewee_list : dict[Times, list[Interviewee]] = {}
     @property
     def name(self) -> str:
         return self._name
     @property
-    def time_slots(self) -> list[Timeslot]:
+    def time_slots(self) -> list[Times]:
         return self._time_slots
     @property
     def degree_program_preference(self) -> list[DegreeProgram] | DegreeProgram | None:
         return self._degree_program_preference
     @property
-    def interviewee_list(self) -> list[Interviewee]:
-        return self.interviewee_list
-    def add_to_interviewee_list(self, interviewee: Interviewee):
-        self._interviewee_list.append(interviewee)
+    def interviewee_list(self) -> dict[Times, list[Interviewee]]:
+        return self._interviewee_list
+    def add_to_interviewee_list(self, interviewee: Interviewee, time : Times, max_alloc: int):
+        if len(self._interviewee_list[time]) >= max_alloc:
+            return 0
+        self._interviewee_list[time].append(interviewee)
+        return 1    
