@@ -18,9 +18,9 @@ def test_pq_algorithm():
     scheduler_algo = Scheduler(interviewees, company)
     scheduler_algo.prio_queue_algorithm()
     y = []
-    y.append(scheduler_algo.get_pq_elem()[1])
-    y.append(scheduler_algo.get_pq_elem()[1])
-    y.append(scheduler_algo.get_pq_elem()[1])
+    y.append(scheduler_algo.get_pq_elem()[2])
+    y.append(scheduler_algo.get_pq_elem()[2])
+    y.append(scheduler_algo.get_pq_elem()[2])
     y = list(map(lambda x : x.name, y))
     assert y == ['C', 'A', 'B']
 
