@@ -11,7 +11,7 @@ class Interviewee:
         self._degree_program = degree_program
         self._priority = len(time_slots)
         self._registration_order = registration_order
-        self._granted_slot: Times | None = None
+        self._granted_slot: Times
     @property
     def name(self) -> str:
         return self._name
@@ -34,7 +34,7 @@ class Interviewee:
     def registration_order(self) -> int:
         return self._registration_order
     @property
-    def granted_slot(self) -> Times | None:
+    def granted_slot(self) -> Times:
         return self._granted_slot
     
     def set_granted_slot(self, time: Times):
