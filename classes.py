@@ -34,7 +34,7 @@ class Interviewee:
     def registration_order(self) -> int:
         return self._registration_order
     @property
-    def granted_slot(self) -> Times:
+    def granted_slot(self) -> Times | None:
         return self._granted_slot
     
     def set_granted_slot(self, time: Times):
