@@ -1,8 +1,9 @@
 from __future__ import annotations
 from protocols import Times, DegreeProgram, Participant
 from classes import Interviewee, Interviewer
-import queue
 from typing import Tuple
+import heapq
+
 class Scheduler:
     def __init__(self, interviewee_data: list[Interviewee], interviewer_data: Interviewer):
         self._interviewee_data = interviewee_data
@@ -10,29 +11,35 @@ class Scheduler:
         self._not_allocated_interviewees : list[Interviewee] = []
 
     def prio_queue_algorithm(self):
-        pq = queue.PriorityQueue()
+        pq = []
         i = 1
         for interviewee in self._interviewee_data:
-            pq.put((interviewee.priority, i, interviewee))
+            heapq.heappush(pq, (interviewee.priority, i, interviewee))
             i+=1 
         self._pq = pq
     def get_pq_elem(self) -> Tuple[int, int, Interviewee]:
-        return self._pq.get()
+        return heapq.heappop(self._pq)
     def add_to_interviewer_schedule(self, interviewee_allotment_per_timeslot: int):
         # I have yet to figure out how to make this more efficient
         not_empty = True
         while not_empty == True:
             item = self.get_pq_elem()[2]
-            print(item.name)
             matching_timeslots = set(item.time_slots).intersection(self._interviewer_data.time_slots)
             if len(matching_timeslots) != 0: # check if matches occur
+                checker = False
                 for time_slot in matching_timeslots:
-                    print(time_slot)
                     if self._interviewer_data.add_to_interviewee_list(item, time_slot, interviewee_allotment_per_timeslot) == 1: # checks if time slot is full
+                        # check if any of the items in the list can be replaced (this is probably very slow)
+                        checker = True
                         break
+                if checker == False:
+                    result = self._interviewer_data.resolve_first_come_first_serve_conflict(item, time_slot)
+                    if result != None:
+                        self._not_allocated_interviewees.append(result)
+                        break                        
             else:
                 self._not_allocated_interviewees.append(item)
-            if self._pq.empty() == True:
+            if not self._pq:
                 not_empty = False
     @property
     def not_allocated_interviewees(self):
