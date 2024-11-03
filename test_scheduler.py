@@ -51,6 +51,7 @@ def test_scheduling_algorithm_first_come_first_serve():
     assert ['B'] == list(map(lambda x : x.name, company.interviewee_list[Times.Time0915_1015]))
     assert ['D'] == list(map(lambda x : x.name, scheduler_algo.not_allocated_interviewees))
 
+    
 
 
 if __name__ == '__main__':

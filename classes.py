@@ -57,6 +57,9 @@ class Interviewer:
     @property
     def interviewee_list(self) -> dict[Times, list[Interviewee]]:
         return self._interviewee_list
+    @property
+    def priority(self):
+        return len(self._time_slots)
     def add_to_interviewee_list(self, interviewee: Interviewee, time : Times, max_alloc: int):
         if time not in self._interviewee_list.keys():
             self._interviewee_list[time] = []

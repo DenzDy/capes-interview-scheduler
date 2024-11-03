@@ -30,13 +30,16 @@ class Scheduler:
                 for time_slot in matching_timeslots:
                     if self._interviewer_data.add_to_interviewee_list(item, time_slot, interviewee_allotment_per_timeslot) == 1: # checks if time slot is full
                         # check if any of the items in the list can be replaced (this is probably very slow)
+                        self._interviewee_data.remove(item)
                         checker = True
                         break
                 if checker == False:
                     result = self._interviewer_data.resolve_first_come_first_serve_conflict(item, time_slot)
                     if result != None:
                         self._not_allocated_interviewees.append(result)
-                        break                        
+                        break
+                    else:
+                        self._interviewee_data.remove(item) # TODO: refactor such that both instances of this line of code are merged into one
             else:
                 self._not_allocated_interviewees.append(item)
             if not self._pq:
