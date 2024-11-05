@@ -35,8 +35,6 @@ class Times(str, Enum): # not ideal, but I don't really want to deal with dateti
     Time1530_1630 = "03:30 PM - 04:30 PM"
     Time1645_1745 = "04:45 PM - 05:45 PM"
 
-
-
 class Participant(Protocol):
     @property
     def name(self) -> str:

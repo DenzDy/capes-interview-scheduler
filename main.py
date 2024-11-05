@@ -60,7 +60,19 @@ def get_degree_program(input):
         'BS Materials Engineering' : DegreeProgram.MaterialsEngg,
         'BS Mechanical Engineering' : DegreeProgram.MechEngg,
         'BS Metallurgical Engineering' : DegreeProgram.MetalEngg,
-        'BS Mining Engineering' : DegreeProgram.MiningEngg
+        'BS Mining Engineering' : DegreeProgram.MiningEngg,
+        'ChE' : DegreeProgram.ChemicalEngg,
+        'CE' : DegreeProgram.CivilEngg,
+        'CoE' : DegreeProgram.ComputerEngg,
+        'CS' : DegreeProgram.ComputerScience,
+        'EE' : DegreeProgram.ElectricalEngg,
+        'ECE' : DegreeProgram.ElectronicsEngg,
+        'GE' : DegreeProgram.GeodeticEngg,
+        'IE' : DegreeProgram.IndustrialEngg,
+        'MatE' : DegreeProgram.MaterialsEngg,
+        'ME' : DegreeProgram.MechEngg,
+        'MetE' : DegreeProgram.MetalEngg,
+        'EM' : DegreeProgram.MiningEngg
     }
     return switch[input]
 def create_interviewee_list_per_day(df : pd.DataFrame | pd.Series, appointment_type : str, day : str):
@@ -76,14 +88,39 @@ def create_interviewee_list_per_day(df : pd.DataFrame | pd.Series, appointment_t
                     time_slots += result
         interviewee_list.append(Interviewee(row["Name"], row["Email"], "0000", time_slots, index, get_degree_program(row["Degree Program"])))
     return interviewee_list
+def company_time_block_cases(time_block: str, appointment_type: str) -> list[Times]:
+    switch = {
+        ("Second Half (1:45 PM - 5:45 PM)", "RC") : [Times.Time1400_1445, Times.Time1500_1545, Times.Time1600_1645],
+        ("Second Half (1:45 PM - 5:45 PM)", "IS") : [Times.Time1415_1515, Times.Time1530_1630]        
+    }
+    return switch[(time_block, appointment_type)]
+
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("./test_interviewee_data.csv", converters={'RC Nov 21 B': str})
-    initial_clean = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    # Interviewee Data cleaning
+    interviewee_df = pd.read_csv("./test_interviewee_data.csv", converters={'RC Nov 21 B': str})
+    initial_clean = interviewee_df.loc[:, ~interviewee_df.columns.str.contains('^Unnamed')]
     dropped_null = initial_clean.dropna()
     clean_interview_truth_value(dropped_null, True)
     upskill_days = [("RC", "1"), ("RC", "2"), ("IS", "1"), ("IS", "2")]
+
+    # Company Data Cleaning
+    company_df = pd.read_csv("./test_company_data.csv", converters={'Timeslot': str})
+    company_df.columns = company_df.iloc[4]
+    for _ in range(5):
+        company_df.drop(company_df.index[0], axis=0, inplace=True)
+    company_df = company_df.loc[:, company_df.columns.notna()]
+    print(company_df.head())
+
+    # Interviewer Object Creation
+    interviewer_list = []
+    for index, row in company_df.iterrows():
+        time_slots = company_time_block_cases(row['Timeslot'], row['RC/IS'])
+        preferred_program_list = row["Preferred Degree Program"].split(", ")
+        preferred_program_list = [get_degree_program(x) for x in preferred_program_list]
+        interviewer_list.append(Interviewer(row["Company Name"], time_slots, preferred_program_list, row['RC/IS']))
+    # Interviewee Allocation
     prev_day = None
     interviewer_pq = set_interviewer_priorities([])
     unallocated_interviewees = []
