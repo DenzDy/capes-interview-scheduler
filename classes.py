@@ -12,6 +12,10 @@ class Interviewee:
         self._priority = len(time_slots)
         self._registration_order = registration_order
         self._granted_slot: Times
+    def __eq__(self, b):
+        return self.name == b.name
+    def __hash__(self):
+        return hash(self.name)
     @property
     def name(self) -> str:
         return self._name

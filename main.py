@@ -103,8 +103,11 @@ def company_time_block_cases(time_block: str, appointment_type: str) -> list[Tim
 if __name__ == "__main__":
 
     # Mount data sets
-    company_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTNYcUyx1PVU1V0SA0wnDULnewFxUiHUC7ldZdiUtWcWsHMFHJxvuW1Sv5WFDcdTp7u-u7ZzQjRUpFd/pub?gid=0&single=true&output=csv", converters={'Timeslot': str})
-    interviewee_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRa3mG_GWUj4kBkaLQRwj8W5_XS8BOVyJ9uAYxjI6L8TgALXcfN5ad4cFnOhLMOlUQ76aTJz3By79-W/pub?gid=883177446&single=true&output=csv", converters={'RC Nov 21 B': str})
+    #company_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTNYcUyx1PVU1V0SA0wnDULnewFxUiHUC7ldZdiUtWcWsHMFHJxvuW1Sv5WFDcdTp7u-u7ZzQjRUpFd/pub?gid=0&single=true&output=csv", converters={'Timeslot': str})
+    #interviewee_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRa3mG_GWUj4kBkaLQRwj8W5_XS8BOVyJ9uAYxjI6L8TgALXcfN5ad4cFnOhLMOlUQ76aTJz3By79-W/pub?gid=883177446&single=true&output=csv", converters={'RC Nov 21 B': str})
+
+    company_df = pd.read_csv("./test_company_data.csv",converters={'Timeslot': str} )
+    interviewee_df = pd.read_csv("./test_interviewee_data.csv")
 
     # Interviewee Data cleaning
     initial_clean = interviewee_df.loc[:, ~interviewee_df.columns.str.contains('^Unnamed')]
@@ -130,47 +133,35 @@ if __name__ == "__main__":
         interviewer_list.append(Interviewer(row["Company Name"], time_slots, preferred_program_list, row['RC/IS']))
     
     # Interviewee Allocation
-    prev_day = None
+    prev_type = None
     unallocated_interviewees = []
+    allocated_interviewees = []
     for _, (type, day) in enumerate(upskill_days):
         interviewee_list = create_interviewee_list_per_day(dropped_null, type, day)
         interviewer_pq = set_interviewer_priorities(interviewer_list, type)
-        if prev_day == None or prev_day == day:
-            unallocated_interviewees += interviewee_list
+        if prev_type == None or prev_type == type:
+            print(type)
+            interviewee_list += unallocated_interviewees
+            interviewee_list = list(set(interviewee_list))
+            interviewee_list = list(set(interviewee_list).difference(allocated_interviewees))
         else:
+            print("Next Type")
             unallocated_interviewees = []
+            allocated_interviewees = []
         pq_empty = False
+        print(f"Interviewee List: {list(map(lambda x : x.name, interviewee_list))}")
+
         while len(interviewee_list) != 0:
             if len(interviewer_pq) == 0:
                 break
             else:
                 current_company = heapq.heappop(interviewer_pq)
             schedule = Scheduler(interviewee_list, current_company[1])
-            for x in interviewee_list:
-                print(f"Name: {x.name} \nTime Slots: {x.time_slots}")
-                      
-            #print("Current Company: ", current_company[1].name, current_company[1].degree_program_preference)
             schedule.prio_queue_algorithm()
-            for x in schedule._pq:
-                print(f'Name: {x[2].name} \nTime Slots: {x[2].time_slots}\n')
-            #print("Priority Queue: ",list(map(lambda x : (x[2].name, x[2].degree_program), schedule._pq)))
-            #print("\n")
-            schedule.add_to_interviewer_schedule(8)
-            for key in schedule._interviewer_data.interviewee_list.keys():
-                print(f"{str(key)}: {list(map(lambda x : x.name, schedule._interviewer_data.interviewee_list[key]))}")
-
+            schedule.add_to_interviewer_schedule(1)
             unallocated_interviewees = schedule.not_allocated_interviewees
-            interviewee_list = unallocated_interviewees    
-            print("\n")
+            allocated_interviewees += schedule.allocated_interviewees
+            print(f"Allocated List: {list(map(lambda x : x.name, allocated_interviewees))}")
 
-    
-
-                
-            
-
-
-
-    
-
-
-
+        prev_type = type
+        print("Next Day \n")

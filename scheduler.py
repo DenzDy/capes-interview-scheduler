@@ -9,7 +9,7 @@ class Scheduler:
         self._interviewee_data = interviewee_data
         self._interviewer_data = interviewer_data
         self._not_allocated_interviewees : list[Interviewee] = []
-
+        self._allocated_interviewees: list[Interviewee] = []
     def prio_queue_algorithm(self):
         pq = []
         i = 1
@@ -32,6 +32,7 @@ class Scheduler:
                     if self._interviewer_data.add_to_interviewee_list(item, time_slot, interviewee_allotment_per_timeslot) == 1: # checks if time slot is full
                         # check if any of the items in the list can be replaced (this is probably very slow)
                         self._interviewee_data.remove(item)
+                        self._allocated_interviewees.append(item)
                         checker = True
                         break
                 if checker == False:
@@ -41,6 +42,7 @@ class Scheduler:
                         break
                     else:
                         self._interviewee_data.remove(item) # TODO: refactor such that both instances of this line of code are merged into one
+                        self._allocated_interviewees.append(item)
             else:
                 self._not_allocated_interviewees.append(item)
             if not self._pq:
@@ -48,3 +50,6 @@ class Scheduler:
     @property
     def not_allocated_interviewees(self):
         return self._not_allocated_interviewees
+    @property
+    def allocated_interviewees(self):
+        return self._allocated_interviewees
