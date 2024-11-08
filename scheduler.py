@@ -24,7 +24,8 @@ class Scheduler:
         not_empty = True
         while not_empty == True:
             item = self.get_pq_elem()[2]
-            matching_timeslots = set(item.time_slots).intersection(self._interviewer_data.time_slots)
+            matching_timeslots = set(item.time_slots).intersection(set(self._interviewer_data.time_slots))
+            print(f"Interviewee Timeslot: {item.time_slots}\nInterviewer Timeslot: {self._interviewer_data.time_slots}\nSet Intersection: {matching_timeslots}")
             if len(matching_timeslots) != 0: # check if matches occur
                 checker = False
                 for time_slot in matching_timeslots:

@@ -44,8 +44,11 @@ class Interviewer:
         self._name = name
         self._time_slots = time_slots
         self._degree_program_preference = degree_program_preference
-        self._interviewee_list : dict[Times, list[Interviewee]] = {},
-        self._appointment_type = 
+        self._interviewee_list : dict[Times, list[Interviewee]] = dict()
+        self._appointment_type = appointment_type
+    def __lt__(a : Interviewer, b : Interviewer):
+        return a.priority < b.priority
+        
     @property
     def name(self) -> str:
         return self._name
@@ -61,6 +64,9 @@ class Interviewer:
     @property
     def priority(self):
         return len(self._time_slots)
+    @property
+    def appointment_type(self):
+        return self._appointment_type
     def add_to_interviewee_list(self, interviewee: Interviewee, time : Times, max_alloc: int):
         if time not in self._interviewee_list.keys():
             self._interviewee_list[time] = []
@@ -71,7 +77,7 @@ class Interviewer:
         return 1    
     def resolve_first_come_first_serve_conflict(self, interviewee: Interviewee, time: Times) -> Interviewee | None:
         list_of_timeslots: list[Interviewee] = []
-        for item in interviewee.time_slots:
+        for item in list(set(interviewee.time_slots).intersection(set(self.time_slots))):
             list_of_timeslots += self._interviewee_list[item]
         list_of_timeslots.sort
         if any(interviewee.registration_order < item.registration_order for item in list_of_timeslots):

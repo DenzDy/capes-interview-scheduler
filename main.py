@@ -1,10 +1,12 @@
+import sched
 from classes import Interviewer, Interviewee
 from protocols import Times, DegreeProgram
 from scheduler import Scheduler
 import heapq
 import pandas as pd
-def set_interviewer_priorities(input : list[Interviewer]):
+def set_interviewer_priorities(input : list[Interviewer], appointment_type):
     pq = []
+    input = list(filter(lambda x : x.appointment_type == appointment_type, input))
     for interviewer in input:
         heapq.heappush(pq, (interviewer.priority, interviewer))
     return pq
@@ -79,13 +81,14 @@ def create_interviewee_list_per_day(df : pd.DataFrame | pd.Series, appointment_t
     # input is a row in the dataframe, output is the list of interviewee time slots for only one option (RC or IS)
     interviewee_list : list[Interviewee] = []
     for index, row in df.iterrows():
+
         truth_value = [int(bit) for bit in row[get_day_and_type_of_appointment(appointment_type, day)]]
         time_slots = []
         for index, digit in enumerate(truth_value): # guys this isn't O(n) I swear!!!
             if digit == 1:
                 result = get_timeslot(index + 1, appointment_type)
                 if result is not None:
-                    time_slots += result
+                    time_slots.append(result)
         interviewee_list.append(Interviewee(row["Name"], row["Email"], "0000", time_slots, index, get_degree_program(row["Degree Program"])))
     return interviewee_list
 def company_time_block_cases(time_block: str, appointment_type: str) -> list[Times]:
@@ -98,20 +101,25 @@ def company_time_block_cases(time_block: str, appointment_type: str) -> list[Tim
 
 
 if __name__ == "__main__":
+
+    # Mount data sets
+    company_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTNYcUyx1PVU1V0SA0wnDULnewFxUiHUC7ldZdiUtWcWsHMFHJxvuW1Sv5WFDcdTp7u-u7ZzQjRUpFd/pub?gid=0&single=true&output=csv", converters={'Timeslot': str})
+    interviewee_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRa3mG_GWUj4kBkaLQRwj8W5_XS8BOVyJ9uAYxjI6L8TgALXcfN5ad4cFnOhLMOlUQ76aTJz3By79-W/pub?gid=883177446&single=true&output=csv", converters={'RC Nov 21 B': str})
+
     # Interviewee Data cleaning
-    interviewee_df = pd.read_csv("./test_interviewee_data.csv", converters={'RC Nov 21 B': str})
     initial_clean = interviewee_df.loc[:, ~interviewee_df.columns.str.contains('^Unnamed')]
     dropped_null = initial_clean.dropna()
     clean_interview_truth_value(dropped_null, True)
+    clean_interview_truth_value(dropped_null, False)
+
     upskill_days = [("RC", "1"), ("RC", "2"), ("IS", "1"), ("IS", "2")]
 
     # Company Data Cleaning
-    company_df = pd.read_csv("./test_company_data.csv", converters={'Timeslot': str})
     company_df.columns = company_df.iloc[4]
     for _ in range(5):
         company_df.drop(company_df.index[0], axis=0, inplace=True)
     company_df = company_df.loc[:, company_df.columns.notna()]
-    print(company_df.head())
+    company_df = company_df.dropna()
 
     # Interviewer Object Creation
     interviewer_list = []
@@ -120,23 +128,38 @@ if __name__ == "__main__":
         preferred_program_list = row["Preferred Degree Program"].split(", ")
         preferred_program_list = [get_degree_program(x) for x in preferred_program_list]
         interviewer_list.append(Interviewer(row["Company Name"], time_slots, preferred_program_list, row['RC/IS']))
+    
     # Interviewee Allocation
     prev_day = None
-    interviewer_pq = set_interviewer_priorities([])
     unallocated_interviewees = []
     for _, (type, day) in enumerate(upskill_days):
         interviewee_list = create_interviewee_list_per_day(dropped_null, type, day)
+        interviewer_pq = set_interviewer_priorities(interviewer_list, type)
         if prev_day == None or prev_day == day:
             unallocated_interviewees += interviewee_list
         else:
             unallocated_interviewees = []
         pq_empty = False
-        while pq_empty == False or len(interviewee_list) == 0:
-            current_company = heapq.heappop(interviewer_pq)
-            schedule = Scheduler(interviewee_list, current_company)
+        while len(interviewee_list) != 0:
+            if len(interviewer_pq) == 0:
+                break
+            else:
+                current_company = heapq.heappop(interviewer_pq)
+            schedule = Scheduler(interviewee_list, current_company[1])
+            for x in interviewee_list:
+                print(f"Name: {x.name} \nTime Slots: {x.time_slots}")
+                      
+            #print("Current Company: ", current_company[1].name, current_company[1].degree_program_preference)
+            schedule.prio_queue_algorithm()
+            for x in schedule._pq:
+                print(f'Name: {x[2].name} \nTime Slots: {x[2].time_slots}')
+            #print("Priority Queue: ",list(map(lambda x : (x[2].name, x[2].degree_program), schedule._pq)))
+            #print("\n")
             schedule.add_to_interviewer_schedule(8)
+            print("Company Time Slots: ", schedule._interviewer_data.time_slots)
             unallocated_interviewees = schedule.not_allocated_interviewees
-
+            interviewee_list = unallocated_interviewees    
+            print("\n")
 
                 
             
