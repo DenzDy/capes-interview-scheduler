@@ -152,14 +152,18 @@ if __name__ == "__main__":
             #print("Current Company: ", current_company[1].name, current_company[1].degree_program_preference)
             schedule.prio_queue_algorithm()
             for x in schedule._pq:
-                print(f'Name: {x[2].name} \nTime Slots: {x[2].time_slots}')
+                print(f'Name: {x[2].name} \nTime Slots: {x[2].time_slots}\n')
             #print("Priority Queue: ",list(map(lambda x : (x[2].name, x[2].degree_program), schedule._pq)))
             #print("\n")
             schedule.add_to_interviewer_schedule(8)
-            print("Company Time Slots: ", schedule._interviewer_data.time_slots)
+            for key in schedule._interviewer_data.interviewee_list.keys():
+                print(f"{str(key)}: {list(map(lambda x : x.name, schedule._interviewer_data.interviewee_list[key]))}")
+
             unallocated_interviewees = schedule.not_allocated_interviewees
             interviewee_list = unallocated_interviewees    
             print("\n")
+
+    
 
                 
             
