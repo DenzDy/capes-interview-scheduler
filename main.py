@@ -45,7 +45,8 @@ def get_timeslot(time_id : int, appointment_type : str):
             "3" : Times.Time1300_1400,
             "4" : Times.Time1415_1515,
             "5" : Times.Time1530_1630,
-            "6" : None
+            "6" : Times.Time1645_1745,
+            "7" : None
         }
     return switch[str(time_id)]
 
@@ -81,8 +82,7 @@ def create_interviewee_list_per_day(df : pd.DataFrame | pd.Series, appointment_t
     # input is a row in the dataframe, output is the list of interviewee time slots for only one option (RC or IS)
     interviewee_list : list[Interviewee] = []
     for index, row in df.iterrows():
-
-        truth_value = [int(bit) for bit in row[get_day_and_type_of_appointment(appointment_type, day)]]
+        truth_value = [int(bit) for bit in row[get_day_and_type_of_appointment(appointment_type, day)]] 
         time_slots = []
         for index, digit in enumerate(truth_value): # guys this isn't O(n) I swear!!!
             if digit == 1:
@@ -93,8 +93,12 @@ def create_interviewee_list_per_day(df : pd.DataFrame | pd.Series, appointment_t
     return interviewee_list
 def company_time_block_cases(time_block: str, appointment_type: str) -> list[Times]:
     switch = {
-        ("Second Half (1:45 PM - 5:45 PM)", "RC") : [Times.Time1400_1445, Times.Time1500_1545, Times.Time1600_1645],
-        ("Second Half (1:45 PM - 5:45 PM)", "IS") : [Times.Time1415_1515, Times.Time1530_1630]        
+        ("Second Half (1:45 PM - 5:45 PM)", "RC") : [Times.Time1400_1445, Times.Time1500_1545, Times.Time1600_1645, Times.Time1700_1745],
+        ("Second Half (1:45 PM - 5:45 PM)", "IS") : [Times.Time1415_1515, Times.Time1530_1630, Times.Time1645_1745],
+        ("Whole Day (8:30 AM - 5:45 PM)", "RC") : [Times.Time0915_0945, Times.Time1000_1045, Times.Time1100_1145, Times.Time1300_1345, Times.Time1400_1445, Times.Time1500_1545, Times.Time1600_1645, Times.Time1700_1745],
+        ("Whole Day (8:30 AM - 5:45 PM)", "IS") : [Times.Time0915_1015, Times.Time1030_1130, Times.Time1300_1400, Times.Time1415_1515, Times.Time1530_1630, Times.Time1645_1745],
+        ("First Half (8:30 AM - 1:45 PM)", "RC") : [Times.Time0915_0945, Times.Time1000_1045, Times.Time1100_1145, Times.Time1300_1345],
+        ("First Half (8:30 AM - 1:45 PM)", "IS") : [Times.Time0915_1015, Times.Time1030_1130, Times.Time1300_1400]
     }
     return switch[(time_block, appointment_type)]
 
@@ -117,16 +121,10 @@ if __name__ == "__main__":
 
     upskill_days = [("RC", "1"), ("RC", "2"), ("IS", "1"), ("IS", "2")]
 
-    # Company Data Cleaning
-    company_df.columns = company_df.iloc[4]
-    for _ in range(5):
-        company_df.drop(company_df.index[0], axis=0, inplace=True)
-    company_df = company_df.loc[:, company_df.columns.notna()]
-    company_df = company_df.dropna()
-
     # Interviewer Object Creation
     interviewer_list = []
     for index, row in company_df.iterrows():
+        print(row['Company Name'])
         time_slots = company_time_block_cases(row['Timeslot'], row['RC/IS'])
         preferred_program_list = row["Preferred Degree Program"].split(", ")
         preferred_program_list = [get_degree_program(x) for x in preferred_program_list]
@@ -136,6 +134,7 @@ if __name__ == "__main__":
     prev_type = None
     unallocated_interviewees = []
     allocated_interviewees = []
+    schedules : list[Scheduler] = []
     for _, (type, day) in enumerate(upskill_days):
         interviewee_list = create_interviewee_list_per_day(dropped_null, type, day)
         interviewer_pq = set_interviewer_priorities(interviewer_list, type)
@@ -145,11 +144,12 @@ if __name__ == "__main__":
             interviewee_list = list(set(interviewee_list))
             interviewee_list = list(set(interviewee_list).difference(allocated_interviewees))
         else:
-            print("Next Type")
+            print("Next Type\n")
             unallocated_interviewees = []
             allocated_interviewees = []
         pq_empty = False
         print(f"Interviewee List: {list(map(lambda x : x.name, interviewee_list))}")
+        print(f"Company List: {list(map(lambda x : x.name, interviewer_list))}\n")
 
         while len(interviewee_list) != 0:
             if len(interviewer_pq) == 0:
@@ -157,11 +157,14 @@ if __name__ == "__main__":
             else:
                 current_company = heapq.heappop(interviewer_pq)
             schedule = Scheduler(interviewee_list, current_company[1])
+            print(f"Company: {current_company[1].name}")
             schedule.prio_queue_algorithm()
             schedule.add_to_interviewer_schedule(1)
             unallocated_interviewees = schedule.not_allocated_interviewees
             allocated_interviewees += schedule.allocated_interviewees
-            print(f"Allocated List: {list(map(lambda x : x.name, allocated_interviewees))}")
-
+            print(f"Allocated List: {list(map(lambda x : x.name, allocated_interviewees))}\n")
+            schedules.append(schedule)
         prev_type = type
         print("Next Day \n")
+    
+

@@ -13,7 +13,7 @@ class Interviewee:
         self._registration_order = registration_order
         self._granted_slot: Times
     def __eq__(self, b):
-        return self.name == b.name
+        return type(self) == type(b) and self.name == b.name 
     def __hash__(self):
         return hash(self.name)
     @property
@@ -89,4 +89,4 @@ class Interviewer:
             self._interviewee_list[list_of_timeslots[-1].granted_slot][index] = interviewee
             return list_of_timeslots[-1]
         
-        
+    
