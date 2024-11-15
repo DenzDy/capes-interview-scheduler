@@ -4,6 +4,7 @@ from protocols import Times, DegreeProgram
 from scheduler import Scheduler
 import heapq
 import pandas as pd
+import csv
 def set_interviewer_priorities(input : list[Interviewer], appointment_type):
     pq = []
     input = list(filter(lambda x : x.appointment_type == appointment_type, input))
@@ -166,5 +167,9 @@ if __name__ == "__main__":
             schedules.append(schedule)
         prev_type = type
         print("Next Day \n")
-    
+
+    with open('test_output.csv', 'w', newline='') as file:
+        
+        csv_writer = csv.writer(file)
+        
 
