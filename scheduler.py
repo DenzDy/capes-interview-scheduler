@@ -1,13 +1,16 @@
 from __future__ import annotations
+from calendar import Day
 from protocols import Times, DegreeProgram, Participant
 from classes import Interviewee, Interviewer
 from typing import Tuple
 import heapq
 
 class Scheduler:
-    def __init__(self, interviewee_data: list[Interviewee], interviewer_data: Interviewer):
+    def __init__(self, interviewee_data: list[Interviewee], interviewer_data: Interviewer, day : str, type: str):
         self._interviewee_data = interviewee_data
         self._interviewer_data = interviewer_data
+        self._day = day
+        self._type = type
         self._not_allocated_interviewees : list[Interviewee] = []
         self._allocated_interviewees: list[Interviewee] = []
     def prio_queue_algorithm(self):
@@ -26,12 +29,12 @@ class Scheduler:
             item = self.get_pq_elem()[2]
             matching_timeslots = set(item.time_slots).intersection(set(self._interviewer_data.time_slots))
             #print(f"Interviewee Timeslot: {item.time_slots}\nInterviewer Timeslot: {self._interviewer_data.time_slots}\nSet Intersection: {matching_timeslots}")
-            if len(matching_timeslots) != 0: # check if matches occur
+            if len(matching_timeslots) != 0 and item.degree_program in self._interviewer_data.degree_program_preference: # check if matches occur
                 checker = False
                 for time_slot in matching_timeslots:
-                    if self._interviewer_data.add_to_interviewee_list(item, time_slot, interviewee_allotment_per_timeslot) == 1: # checks if time slot is full
-                        # check if any of the items in the list can be replaced (this is probably very slow)
+                    if self._interviewer_data.add_to_interviewee_list(item, time_slot, interviewee_allotment_per_timeslot) == 1: # returns 0 if full
                         self._interviewee_data.remove(item)
+                        item.set_granted_slot(time_slot)
                         self._allocated_interviewees.append(item)
                         checker = True
                         break
@@ -42,6 +45,7 @@ class Scheduler:
                         break
                     else:
                         self._interviewee_data.remove(item) # TODO: refactor such that both instances of this line of code are merged into one
+                        item.set_granted_slot(time_slot)
                         self._allocated_interviewees.append(item)
             else:
                 self._not_allocated_interviewees.append(item)
@@ -53,3 +57,9 @@ class Scheduler:
     @property
     def allocated_interviewees(self):
         return self._allocated_interviewees
+    @property
+    def day(self):
+        return self._day
+    @property
+    def type(self):
+        return self._type

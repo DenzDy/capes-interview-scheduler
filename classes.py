@@ -40,11 +40,10 @@ class Interviewee:
     @property
     def granted_slot(self) -> Times:
         return self._granted_slot
-    
     def set_granted_slot(self, time: Times):
         self._granted_slot = time
 class Interviewer:
-    def __init__(self, name: str, time_slots: list[Times], degree_program_preference: list[DegreeProgram] | DegreeProgram | None, appointment_type : str):
+    def __init__(self, name: str, time_slots: list[Times], degree_program_preference: list[DegreeProgram] | DegreeProgram, appointment_type : str):
         self._name = name
         self._time_slots = time_slots
         self._degree_program_preference = degree_program_preference
@@ -60,7 +59,7 @@ class Interviewer:
     def time_slots(self) -> list[Times]:
         return self._time_slots
     @property
-    def degree_program_preference(self) -> list[DegreeProgram] | DegreeProgram | None:
+    def degree_program_preference(self) -> list[DegreeProgram] | DegreeProgram:
         return self._degree_program_preference
     @property
     def interviewee_list(self) -> dict[Times, list[Interviewee]]:

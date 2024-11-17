@@ -4,7 +4,7 @@ from protocols import Times, DegreeProgram
 from scheduler import Scheduler
 import heapq
 import pandas as pd
-import csv
+import json
 def set_interviewer_priorities(input : list[Interviewer], appointment_type):
     pq = []
     input = list(filter(lambda x : x.appointment_type == appointment_type, input))
@@ -136,6 +136,7 @@ if __name__ == "__main__":
     unallocated_interviewees = []
     allocated_interviewees = []
     schedules : list[Scheduler] = []
+    schedule_dictionary : dict[str, list[Scheduler]] = {'RC Nov 21' : [], 'RC Nov 22' : [], 'IS Nov 21' : [], 'IS Nov 22' : []}
     for _, (type, day) in enumerate(upskill_days):
         interviewee_list = create_interviewee_list_per_day(dropped_null, type, day)
         interviewer_pq = set_interviewer_priorities(interviewer_list, type)
@@ -157,19 +158,24 @@ if __name__ == "__main__":
                 break
             else:
                 current_company = heapq.heappop(interviewer_pq)
-            schedule = Scheduler(interviewee_list, current_company[1])
+            schedule = Scheduler(interviewee_list, current_company[1], day, type)
             print(f"Company: {current_company[1].name}")
             schedule.prio_queue_algorithm()
             schedule.add_to_interviewer_schedule(1)
             unallocated_interviewees = schedule.not_allocated_interviewees
             allocated_interviewees += schedule.allocated_interviewees
-            print(f"Allocated List: {list(map(lambda x : x.name, allocated_interviewees))}\n")
+            print(f"Allocated List: {list(map(lambda x : x.name, schedule.allocated_interviewees))}\n")
             schedules.append(schedule)
+            schedule_dictionary[f"{type} Nov 2{day}"] += schedules
+        schedules = []
         prev_type = type
         print("Next Day \n")
-
-    with open('test_output.csv', 'w', newline='') as file:
-        
-        csv_writer = csv.writer(file)
-        
+    final_dict = dict()
+    for key in schedule_dictionary.keys():
+        company_interviewee_dict = {}
+        for schedule in schedule_dictionary[key]:
+            company_interviewee_dict[schedule._interviewer_data.name] = [{"Name" : x.name, "E-mail" : x.email, "Granted Slot" : x.granted_slot} for x in schedule.allocated_interviewees]
+        final_dict[key] = company_interviewee_dict
+    with open("output.json", "w") as file:
+        json.dump(final_dict, file)
 
