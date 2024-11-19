@@ -44,7 +44,7 @@ class Scheduler:
                         self._not_allocated_interviewees.append(result)
                         break
                     else:
-                        self._interviewee_data.remove(item) # TODO: refactor such that both instances of this line of code are merged into one
+                        self._interviewee_data.remove(item) # TODO: refactor such that both instances of this line of code are merged into one  // for allocation
                         item.set_granted_slot(time_slot)
                         self._allocated_interviewees.append(item)
             else:

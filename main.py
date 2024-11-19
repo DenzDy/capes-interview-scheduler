@@ -85,9 +85,9 @@ def create_interviewee_list_per_day(df : pd.DataFrame | pd.Series, appointment_t
     for index, row in df.iterrows():
         truth_value = [int(bit) for bit in row[get_day_and_type_of_appointment(appointment_type, day)]] 
         time_slots = []
-        for index, digit in enumerate(truth_value): # guys this isn't O(n) I swear!!!
+        for index_in, digit in enumerate(truth_value): # guys this isn't O(n) I swear!!!
             if digit == 1:
-                result = get_timeslot(index + 1, appointment_type)
+                result = get_timeslot(index_in + 1, appointment_type)
                 if result is not None:
                     time_slots.append(result)
         interviewee_list.append(Interviewee(row["Name"], row["Email"], "0000", time_slots, index, get_degree_program(row["Degree Program"])))
@@ -103,22 +103,48 @@ def company_time_block_cases(time_block: str, appointment_type: str) -> list[Tim
     }
     return switch[(time_block, appointment_type)]
 
+def allocation_number_generator(company_name : str, type: str):
+    switch = {}
+    if type == 'RC':
+        switch = {
+            "Accenture, Inc." : 2,
+            "Huawei Technologies Phils. Inc. " : 2,
+            "Maya Philippines, Inc." : 4,
+            "Emerson" : 1,
+            "Seven Seven Global Services, Inc." : 1,
+            "Analog Devices, Inc." : 1,
+            "Shell Companies in the Philippines" : 1
 
+        }
+    else:
+        switch = {
+            "Accenture, Inc." : 2,
+            "Huawei Technologies Phils. Inc. " : 3,
+            "Maya Philippines, Inc." : 4,
+            "Emerson" : 2,
+            "Seven Seven Global Services, Inc." : 1,
+            "Analog Devices, Inc." : 1,
+            "Shell Companies in the Philippines" : 4
+
+
+        }
+    return switch[company_name]
 
 if __name__ == "__main__":
 
     # Mount data sets
-    #company_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTNYcUyx1PVU1V0SA0wnDULnewFxUiHUC7ldZdiUtWcWsHMFHJxvuW1Sv5WFDcdTp7u-u7ZzQjRUpFd/pub?gid=0&single=true&output=csv", converters={'Timeslot': str})
-    #interviewee_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRa3mG_GWUj4kBkaLQRwj8W5_XS8BOVyJ9uAYxjI6L8TgALXcfN5ad4cFnOhLMOlUQ76aTJz3By79-W/pub?gid=883177446&single=true&output=csv", converters={'RC Nov 21 B': str})
+    company_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTNYcUyx1PVU1V0SA0wnDULnewFxUiHUC7ldZdiUtWcWsHMFHJxvuW1Sv5WFDcdTp7u-u7ZzQjRUpFd/pub?gid=819140618&single=true&output=csv", converters={'Timeslot': str})
+    interviewee_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRa3mG_GWUj4kBkaLQRwj8W5_XS8BOVyJ9uAYxjI6L8TgALXcfN5ad4cFnOhLMOlUQ76aTJz3By79-W/pub?gid=883177446&single=true&output=csv", converters={'RC Nov 21 B': str})
 
-    company_df = pd.read_csv("./test_company_data.csv",converters={'Timeslot': str} )
-    interviewee_df = pd.read_csv("./test_interviewee_data.csv")
 
     # Interviewee Data cleaning
     initial_clean = interviewee_df.loc[:, ~interviewee_df.columns.str.contains('^Unnamed')]
-    dropped_null = initial_clean.dropna()
+    dropped_null = initial_clean
     clean_interview_truth_value(dropped_null, True)
     clean_interview_truth_value(dropped_null, False)
+
+    print()
+    print(f"{interviewee_df.size}, {dropped_null.size}")
 
     upskill_days = [("RC", "1"), ("RC", "2"), ("IS", "1"), ("IS", "2")]
 
@@ -130,13 +156,16 @@ if __name__ == "__main__":
         preferred_program_list = row["Preferred Degree Program"].split(", ")
         preferred_program_list = [get_degree_program(x) for x in preferred_program_list]
         interviewer_list.append(Interviewer(row["Company Name"], time_slots, preferred_program_list, row['RC/IS']))
-    
+
+    dropped_null.to_csv("interviewee_list.csv")
+
     # Interviewee Allocation
     prev_type = None
     unallocated_interviewees = []
     allocated_interviewees = []
     schedules : list[Scheduler] = []
     schedule_dictionary : dict[str, list[Scheduler]] = {'RC Nov 21' : [], 'RC Nov 22' : [], 'IS Nov 21' : [], 'IS Nov 22' : []}
+    final_unalloc = []
     for _, (type, day) in enumerate(upskill_days):
         interviewee_list = create_interviewee_list_per_day(dropped_null, type, day)
         interviewer_pq = set_interviewer_priorities(interviewer_list, type)
@@ -147,11 +176,12 @@ if __name__ == "__main__":
             interviewee_list = list(set(interviewee_list).difference(allocated_interviewees))
         else:
             print("Next Type\n")
+            final_unalloc += unallocated_interviewees
             unallocated_interviewees = []
             allocated_interviewees = []
         pq_empty = False
-        print(f"Interviewee List: {list(map(lambda x : x.name, interviewee_list))}")
-        print(f"Company List: {list(map(lambda x : x.name, interviewer_list))}\n")
+        #print(f"Interviewee List: {list(map(lambda x : x.name, interviewee_list))}")
+        #print(f"Company List: {list(map(lambda x : x.name, interviewer_list))}\n")
 
         while len(interviewee_list) != 0:
             if len(interviewer_pq) == 0:
@@ -159,23 +189,26 @@ if __name__ == "__main__":
             else:
                 current_company = heapq.heappop(interviewer_pq)
             schedule = Scheduler(interviewee_list, current_company[1], day, type)
-            print(f"Company: {current_company[1].name}")
+        #    print(f"Company: {current_company[1].name}")
             schedule.prio_queue_algorithm()
-            schedule.add_to_interviewer_schedule(1)
+            allocation_number = allocation_number_generator(current_company[1].name, type)
+            schedule.add_to_interviewer_schedule(allocation_number)
             unallocated_interviewees = schedule.not_allocated_interviewees
             allocated_interviewees += schedule.allocated_interviewees
-            print(f"Allocated List: {list(map(lambda x : x.name, schedule.allocated_interviewees))}\n")
+        #    print(f"Allocated List: {list(map(lambda x : x.name, schedule.allocated_interviewees))}\n")
             schedules.append(schedule)
             schedule_dictionary[f"{type} Nov 2{day}"] += schedules
         schedules = []
         prev_type = type
         print("Next Day \n")
+    final_unalloc += unallocated_interviewees
     final_dict = dict()
     for key in schedule_dictionary.keys():
         company_interviewee_dict = {}
         for schedule in schedule_dictionary[key]:
-            company_interviewee_dict[schedule._interviewer_data.name] = [{"Name" : x.name, "E-mail" : x.email, "Granted Slot" : x.granted_slot} for x in schedule.allocated_interviewees]
+            company_interviewee_dict[schedule._interviewer_data.name] = [{"Name" : x.name, "E-mail" : x.email, "Granted Slot" : x.granted_slot, "Priority" : x.priority, "Registration Order" : x.registration_order} for x in schedule.allocated_interviewees]
         final_dict[key] = company_interviewee_dict
+    final_dict["Unallocated"] = [{"Name" : x.name, "E-mail" : x.email, "Priority" : x.priority, "Registration Order" : x.registration_order} for x in final_unalloc]
     with open("output.json", "w") as file:
         json.dump(final_dict, file)
 

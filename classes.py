@@ -51,7 +51,8 @@ class Interviewer:
         self._appointment_type = appointment_type
     def __lt__(a : Interviewer, b : Interviewer):
         return a.priority < b.priority
-        
+    def unallocated_type(self, type):
+        self._unallocated_type = type
     @property
     def name(self) -> str:
         return self._name
@@ -79,13 +80,15 @@ class Interviewer:
         self._interviewee_list[time].append(interviewee)
         return 1    
     def resolve_first_come_first_serve_conflict(self, interviewee: Interviewee, time: Times) -> Interviewee | None:
-        list_of_timeslots: list[Interviewee] = []
+        list_of_timeslots: list[Interviewee] = [] # list of interfering interviewees
         for item in list(set(interviewee.time_slots).intersection(set(self.time_slots))):
-            list_of_timeslots += self._interviewee_list[item]
+            list_of_timeslots += self._interviewee_list[item] 
         list_of_timeslots.sort
         if any(interviewee.registration_order < item.registration_order for item in list_of_timeslots):
-            index = self._interviewee_list[list_of_timeslots[-1].granted_slot].index(list_of_timeslots[-1])
-            self._interviewee_list[list_of_timeslots[-1].granted_slot][index] = interviewee
+            for index, item in enumerate(self._interviewee_list[list_of_timeslots[-1].granted_slot]):
+                if item.name == list_of_timeslots[-1].name:
+                    interviewee.set_granted_slot(list_of_timeslots[-1].granted_slot)
+                    self._interviewee_list[list_of_timeslots[-1].granted_slot][index] = interviewee
             return list_of_timeslots[-1]
         
     
